@@ -1,19 +1,14 @@
 ---
-name: paper-plugin-dev
-description: >
-  Minecraft Paper plugin development skill for Java 21 and Paper 1.21.x. Use for: plugin coding,
-  Paper/Bukkit/Spigot API, event handling, Brigadier commands, Adventure/MiniMessage, Data Component
-  API, PDC, entity/block/item manipulation, inventory GUIs, scheduler/async tasks, packet handling,
-  NMS access, paperweight-userdev, plugin.yml/paper-plugin.yml, Gradle/Maven setup,
-  ProtocolLib/PacketEvents, world generation, scoreboard/boss bar/title/tab list, resource packs,
-  database, config, permissions, PlaceholderAPI. Trigger on: plugin, addon, Paper, Bukkit, Spigot,
-  Minecraft, server mod, SMP, or any Java+Minecraft development context.
+name: lancerarchive-paper-plugin-dev
+description: "Minecraft Paper plugin development skill for Java 25 and Paper 26.x. Use for: plugin coding, Paper/Bukkit/Spigot API, event handling, Brigadier commands, Adventure/MiniMessage, Data Component API, PDC, entity/block/item manipulation, inventory GUIs, scheduler/async tasks, packet handling, NMS access, paperweight-userdev, plugin.yml/paper-plugin.yml, Gradle/Maven setup, ProtocolLib/PacketEvents, world generation, scoreboard/boss bar/title/tab list, resource packs, database, config, permissions, PlaceholderAPI. Trigger on: plugin, addon, Paper, Bukkit, Spigot, Minecraft, server mod, SMP, or any Java+Minecraft development context.\n"
 ---
 
-# Minecraft Paper Plugin Development — Java 21 & Paper 1.21.x
+# LancerArchive — Minecraft Paper Plugin Development (Java 25 & Paper 26.x)
+
+> **Attribution:** This project is a modified version of [Paper-ClaudePlugin](https://github.com/ATOMGAMERAGA/Paper-ClaudePlugin) by Atom Gamer Arda A.G.A. Modified and maintained by LancerArchive. The original MIT license and copyright notice are preserved in the accompanying `LICENSE` file.
 
 This skill is a comprehensive reference and rule set that enables Claude to write
-professional-quality Java 21 plugins for Minecraft Paper servers.
+professional-quality Java 25 plugins for Minecraft Paper servers.
 
 ---
 
@@ -33,13 +28,13 @@ pluginManagement {
 // build.gradle.kts
 plugins {
     java
-    id("com.gradleup.shadow") version "8.3.0"            // Fat JAR (shade)
-    id("xyz.jpenilla.run-paper") version "2.3.1"          // Test server
+    id("com.gradleup.shadow") version "9.6.1"            // Fat JAR (shade)
+    id("xyz.jpenilla.run-paper") version "3.1.0"          // Test server
     // If NMS is needed:
     // id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
 }
 
-group = "com.example"
+group = "net.lancerarchive"
 version = "1.0.0"
 
 repositories {
@@ -49,13 +44,13 @@ repositories {
 
 dependencies {
     // API only:
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     // If NMS is needed, use instead of API:
-    // paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+    // paperweight.paperDevBundle("26.2.build.+")
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks.processResources {
@@ -66,7 +61,90 @@ tasks.processResources {
 }
 ```
 
-### 1.2 Maven
+### 1.2 Current LancerArchive Defaults (Minecraft 26.x)
+
+Use these defaults for new projects, then verify the exact Paper build and plugin compatibility before upgrading production servers:
+
+- Project/organization: `LancerArchive`
+- Gradle group: `net.lancerarchive`
+- Java toolchain: Java 25 (required by Paper 26.1+)
+- Paper API baseline: `26.2.build.+` (stable 26.2 baseline; do not target an alpha build for production)
+- Gradle Wrapper: `9.8.2` (latest stable release checked 2026-10-31)
+- Shadow: `9.6.1`
+- Run-Paper: `3.1.0`
+
+Example `settings.gradle.kts`:
+
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "LancerArchive"
+```
+
+Example `build.gradle.kts`:
+
+```kotlin
+plugins {
+    java
+    id("com.gradleup.shadow") version "9.6.1"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
+}
+
+group = "net.lancerarchive"
+version = "1.0.0"
+
+repositories {
+    mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+}
+
+tasks {
+    runServer {
+        minecraftVersion("26.2")
+    }
+
+    processResources {
+        filteringCharset = "UTF-8"
+        val props = mapOf("version" to project.version)
+        inputs.properties(props)
+        filesMatching("plugin.yml") { expand(props) }
+    }
+
+    jar { archiveClassifier.set("plain") }
+    shadowJar { archiveClassifier.set("") }
+    build { dependsOn(shadowJar) }
+}
+```
+
+The `26.2.build.+` dependency is a version range for Paper's build-number scheme, not a literal Minecraft version. For reproducible CI/release builds, pin a specific Paper API build instead of using `+`. The `runServer` Minecraft version is the Minecraft version string, not the Maven dependency coordinate.
+
+### 1.3 Gradle Wrapper
+
+Commit `gradlew`, `gradlew.bat`, and `gradle/wrapper/` to version control. Developers and CI must use the wrapper rather than a globally installed Gradle. Generate/update it with:
+
+```bash
+gradle wrapper --gradle-version 9.8.2 --distribution-type bin
+```
+
+Then build with `./gradlew clean build` on Linux/macOS or `.\gradlew.bat clean build` on Windows. Check the official Gradle releases page before future upgrades.
+
+### 1.4 Compatibility rule for this reference
+
+This document contains older 1.21-era examples. Do not assume every listed method, event, component, command argument, NMS class, or code snippet is valid on Paper 26.x. Before generating code, verify it against the target Paper 26.x Javadocs and current Paper documentation. Prefer current API equivalents, and explicitly label any example that is version-specific. Never silently copy 1.21-only APIs into a 26.x project.
+
+### 1.5 Maven
 
 ```xml
 <repositories>
@@ -79,7 +157,7 @@ tasks.processResources {
     <dependency>
         <groupId>io.papermc.paper</groupId>
         <artifactId>paper-api</artifactId>
-        <version>1.21.4-R0.1-SNAPSHOT</version>
+        <version>[26.2.build,)</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -90,7 +168,7 @@ tasks.processResources {
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.13.0</version>
             <configuration>
-                <release>21</release>
+                <release>25</release>
             </configuration>
         </plugin>
         <plugin>
@@ -102,7 +180,7 @@ tasks.processResources {
 </build>
 ```
 
-### 1.3 Important Java 21 Features (Use in Plugins!)
+### 1.6 Important Java 25 Features (Use in Plugins!)
 
 - **Record classes**: For DTO/config data structures `public record PlayerData(UUID uuid, int level) {}`
 - **Sealed classes**: `sealed interface Reward permits CoinReward, ItemReward {}`
@@ -113,6 +191,19 @@ tasks.processResources {
 - **SequencedCollection**: `list.getFirst()`, `list.getLast()`, `list.reversed()`
 
 ---
+
+## LANCERARCHIVE DEVELOPMENT RULES
+
+- Use `net.lancerarchive` as the default Java package root; use a project-specific subpackage such as `net.lancerarchive.<pluginid>` for each plugin.
+- Use `LancerArchive` as the organization/developer label where an author or organization field is needed. Do not force every plugin's display name to be LancerArchive; keep plugin names project-specific.
+- Target Paper 26.x and Java 25 for new work unless the user explicitly requests another version. Confirm the exact stable Paper release before choosing the API dependency and `api-version`.
+- Treat this file as a reference, not proof that every API snippet is current. Check current Paper Javadocs for version-sensitive APIs before writing code.
+- Do not invent dependency versions, API methods, events, or NMS symbols. If current documentation cannot confirm them, say so and ask for the relevant target version or dependency.
+- Keep API-only dependencies as `compileOnly`; bundle only libraries the plugin actually needs. Relocate bundled libraries when conflicts are possible. Never shade Paper itself.
+- Prefer Paper APIs and Adventure components. Use NMS only when there is no suitable public API, and isolate NMS code behind a small adapter.
+- Prefer configuration-driven behavior, safe database access, prepared statements, lifecycle cleanup, and explicit thread ownership.
+- Do not perform Bukkit/Paper world, entity, inventory, or player operations on arbitrary async threads. Follow Paper/Folia scheduler rules for the target platform.
+- Test against a local server matching the exact target Minecraft/Paper version before considering code complete.
 
 ## 2. PLUGIN ENTRY POINT AND LIFECYCLE
 
@@ -151,8 +242,8 @@ public final class MyPlugin extends JavaPlugin {
 ```yaml
 name: MyPlugin
 version: '${version}'
-main: com.example.myplugin.MyPlugin
-api-version: '1.21.4'
+main: net.lancerarchive.myplugin.MyPlugin
+api-version: '26.2'
 description: Description
 author: AuthorName
 website: https://example.com
@@ -185,10 +276,10 @@ commands:
 ```yaml
 name: MyPaperPlugin
 version: '1.0.0'
-main: com.example.myplugin.MyPlugin
-api-version: '1.21.4'
-bootstrapper: com.example.myplugin.MyBootstrap
-loader: com.example.myplugin.MyLoader
+main: net.lancerarchive.myplugin.MyPlugin
+api-version: '26.2'
+bootstrapper: net.lancerarchive.myplugin.MyBootstrap
+loader: net.lancerarchive.myplugin.MyLoader
 
 dependencies:
   server:
@@ -1126,7 +1217,7 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
 }
 dependencies {
-    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("26.2.build.+")
 }
 
 // Usage — Mojang-mapped names (1.20.5+)
@@ -1461,7 +1552,7 @@ public record DatabaseConfig(String type, String host, int port, String name, St
 | `IllegalPluginAccessException` in async | Bukkit API called from async thread | Return to main thread with `runTask()` |
 | PDC data disappearing | `BlockState.update()` not called | Call `state.update()` after block entity PDC changes |
 | Command tab-complete not working | Old Bukkit command system | Switch to Brigadier API |
-| `api-version` missing | Not specified in plugin.yml | Add `api-version: '1.21.4'`, otherwise legacy warning |
+| `api-version` missing | Not specified in plugin.yml | Add `api-version: '26.2'`, otherwise legacy warning |
 | Config special characters broken | Encoding issue | `filteringCharset = "UTF-8"` in Gradle, config files as UTF-8 |
 
 ---
@@ -2499,7 +2590,7 @@ public void onGrimFlag(FlagEvent event) {
 
 ---
 
-**Javadoc:** https://jd.papermc.io/paper/1.21.4/  
+**Javadoc:** https://jd.papermc.io/paper/26.2/  
 **Paper Docs:** https://docs.papermc.io/paper/dev/  
 **Adventure Docs:** https://docs.papermc.io/adventure/  
 **MiniMessage Viewer:** https://webui.advntr.dev/  
