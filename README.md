@@ -26,12 +26,6 @@ Paper Plugin Dev is a Claude Code plugin that equips Claude with a curated 2,500
 
 ## Installation
 
-### Quick Install
-
-```bash
-claude install-plugin ATOMGAMERAGA//mc-paper-26x-skill 
-```
-
 ### Manual Install
 
 ```bash
